@@ -12,7 +12,6 @@
 
 const USUARIOS_SISTEMA = [
   { usuario: '4321', senha: '4321', nome: 'ADMINISTRADOR' },
-
   { usuario: '9354', senha: '9354', nome: 'Yasmin' },
   { usuario: '0262', senha: '0262', nome: 'Diana' },
   { usuario: '9009', senha: '9009', nome: 'Tainara' },
@@ -21,7 +20,6 @@ const USUARIOS_SISTEMA = [
   { usuario: '0214', senha: '0214', nome: 'Matheus' },
   { usuario: '5661', senha: '5661', nome: 'Carlos' },
   { usuario: '8990', senha: '8990', nome: 'Emanuel' },
-
   { usuario: '0236', senha: '0236', nome: 'Caroline' },
   { usuario: '9440', senha: '9440', nome: 'Raymison' },
   { usuario: '3991', senha: '3991', nome: 'Willian' },
@@ -31,7 +29,41 @@ const USUARIOS_SISTEMA = [
   { usuario: '0457', senha: '0457', nome: 'Lucas' },
   { usuario: '4308', senha: '4308', nome: 'Alessandra' },
   { usuario: '9001', senha: '9001', nome: 'Kellyo' },
-  { usuario: '4296', senha: '4296', nome: 'Roger' }
+  { usuario: '4296', senha: '4296', nome: 'Roger' },
+  { usuario: '6713', senha: '6713', nome: 'Vitorino' },
+  { usuario: '6596', senha: '6596', nome: 'Aldenir' },
+  { usuario: '8248', senha: '8248', nome: 'Alissom' },
+  { usuario: '3499', senha: '3499', nome: 'Rogerio' },
+  { usuario: '7014', senha: '7014', nome: 'Jacome' },
+  { usuario: '6595', senha: '6595', nome: 'Alcides' },
+  { usuario: '5920', senha: '5920', nome: 'Carlos' },
+  { usuario: '7019', senha: '7019', nome: 'Muniz' },
+  { usuario: '8342', senha: '8342', nome: 'Valter' },
+  { usuario: '4848', senha: '4848', nome: 'Aparecida' },
+  { usuario: '1206', senha: '1206', nome: 'Augusto' },
+  { usuario: '8867', senha: '8867', nome: 'Benedito' },
+  { usuario: '3123', senha: '3123', nome: 'Brenda' },
+  { usuario: '1888', senha: '1888', nome: 'Vinicius' },
+  { usuario: '3040', senha: '3040', nome: 'Patricia' },
+  { usuario: '8079', senha: '8079', nome: 'Clayrtiano' },
+  { usuario: '6303', senha: '6303', nome: 'Cleitom' },
+  { usuario: '8987', senha: '8987', nome: 'Cynthia' },
+  { usuario: '6373', senha: '6373', nome: 'Daniele' },
+  { usuario: '7927', senha: '7927', nome: 'Edenio' },
+  { usuario: '2067', senha: '2067', nome: 'Edivan' },
+  { usuario: '7742', senha: '7742', nome: 'Fernando' },
+  { usuario: '7064', senha: '7064', nome: 'Francisca' },
+  { usuario: '9131', senha: '9131', nome: 'Viana' },
+  { usuario: '2156', senha: '2156', nome: 'Breno' },
+  { usuario: '2044', senha: '2044', nome: 'Jose' },
+  { usuario: '5751', senha: '5751', nome: 'Patricio' },
+  { usuario: '2671', senha: '2671', nome: 'Sergio' },
+  { usuario: '9020', senha: '9020', nome: 'Medeiros' },
+  { usuario: '8018', senha: '8018', nome: 'Severino' },
+  { usuario: '9308', senha: '9308', nome: 'Francivanda' },
+  { usuario: '6087', senha: '6087', nome: 'Franklin' },
+  { usuario: '8690', senha: '8690', nome: 'Genario' },
+  { usuario: '3152', senha: '3152', nome: 'Gerfson' }
 ];
 
 // Função para validar login (não modificar)
