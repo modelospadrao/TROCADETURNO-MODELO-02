@@ -3,10 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TROCA DE TURNO</title>
+  <title>TROCA DE TURNO v6.0</title>
   <link rel="icon" href="turno.png" type="image/png">
   <script src="usuarios.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     :root {
       --cor-dados: #0053bf;
@@ -19,7 +20,7 @@
     }
     html, body { overscroll-behavior-y: none; margin: 0; padding: 0; }
     body { font-family: Cambria, Cochin, Georgia, Times, sans-serif; background-color: #f5f5f5; font-size: 14px; }
-    .container { width: 95%; margin: 10px auto; background: #fff; padding: 15px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
+    .container { width: 100%; max-width: 1000px; margin: 10px auto; background: #fff; padding: 15px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
     
     /* LOGIN POPUP */
     #login-overlay {
@@ -189,6 +190,8 @@
     #section-dados { z-index: 60; }
     
     .item-box { background: #fafafa; padding: 8px 10px; margin: 6px 0; border-radius: 5px; border: 2px solid #000000; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .item-box.box-erro { border-color: #f44336; animation: pulseBoxErro 1s infinite; }
+    @keyframes pulseBoxErro { 0%, 100% { border-color: #f44336; box-shadow: 0 0 5px rgba(244, 67, 54, 0.5); } 50% { border-color: #ff7961; box-shadow: 0 0 15px rgba(244, 67, 54, 0.8); } }
     .item-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
     .item-title { font-weight: bold; color: #333; font-size: 13px; text-transform: uppercase; flex: 1; min-width: 150px; }
     
@@ -504,7 +507,7 @@
   
   <div class="container" id="main-container">
     <h2 style="text-align: center; color: #1a73e8; margin: 5px 0; font-size: 20px;">🔄 RELATÓRIO DE TROCA DE TURNO</h2>
-    <p style="text-align: center; color: #666; margin: 0 0 10px 0; font-size: 11px;">(Versão 5.4)</p>
+    <p style="text-align: center; color: #666; margin: 0 0 10px 0; font-size: 11px;">(Versão 5.5)</p>
     
     <div id="sessao-info" class="sessao-info" style="display: none;"><strong>📍 Sessão Atual:</strong> <span id="sessao-operador-info"></span></div>
     
@@ -540,9 +543,9 @@
       </div>
 
       <label class="obrigatorio">Operador Atual:</label>
-      <input type="text" id="operador" style="width:100%;"
-             placeholder="SEU NOME"
-             oninput="formatarOperador(this); onCampoAlterado()">
+      <input type="text" id="operador" style="width:100%; background-color: #e8f5e9;"
+             placeholder="(PREENCHIDO AUTOMATICAMENTE)"
+             readonly>
 
       <div class="row-inline">
         <div>
@@ -1008,6 +1011,9 @@ function tentarLogin() {
     document.getElementById('login-usuario-logado').style.display = 'block';
     document.getElementById('nome-usuario-logado').textContent = usuarioLogado.nome;
     
+    // Preenche automaticamente o campo Operador Atual
+    document.getElementById('operador').value = usuarioLogado.nome;
+    
     // Agora verifica se tem sessão salva e mostra as opções
     iniciarSistemaAposLogin();
   } else {
@@ -1263,7 +1269,7 @@ function confirmarImportacao() {
   document.getElementById('operador-anterior-box').style.display = 'block';
   document.getElementById('operador-anterior-nome').textContent = operadorAnterior;
   
-  document.getElementById('operador').classList.add('campo-obrigatorio-import');
+  // Operador não precisa de marcação - já vem preenchido pelo login
   document.getElementById('turno-entrada').classList.add('campo-obrigatorio-import');
   document.getElementById('f-pendentes').classList.add('campo-obrigatorio-import');
   document.getElementById('incidencias-tela-qtd').classList.add('campo-obrigatorio-import');
@@ -1390,10 +1396,20 @@ function restaurarCaixasImportacao(data) {
         contadorItens[id]++;
         const num = contadorItens[id];
         
-        // IMPORTAÇÃO: sempre marca como NÃO REVISADO para forçar revisão
-        const status = 'nao-revisado';
-        const statusClass = 'nao-revisado';
-        const statusText = 'REVISAR';
+        // IMPORTAÇÃO: 
+        // - PENDENTE → REVISAR (forçar revisão)
+        // - RESOLVIDO → RESOLVIDO (mantém até remover manualmente)
+        let status, statusClass, statusText;
+        if (it.status === 'resolvido') {
+          status = 'resolvido';
+          statusClass = 'resolvido';
+          statusText = 'RESOLVIDO';
+        } else {
+          // Qualquer outro status (pendente, nao-revisado) vira REVISAR
+          status = 'nao-revisado';
+          statusClass = 'nao-revisado';
+          statusText = 'REVISAR';
+        }
         
         const afetacaoChecked = it.afetacao ? 'checked' : '';
         const afetacaoQtdVal = it.afetacaoQtd || '0';
@@ -1441,7 +1457,8 @@ function carregarDadosCompletos(d) {
   
   document.getElementById('turno-data').value = d.turnoData || '';
   document.getElementById('turno-entrada').value = d.turnoEntrada || '';
-  document.getElementById('operador').value = d.operador || '';
+  // NÃO sobrescrever operador - ele é preenchido automaticamente pelo login
+  // document.getElementById('operador').value = d.operador || '';
   document.getElementById('regiao').value = d.regiao || '';
   document.getElementById('area').value = d.area || '';
   areaSelecionada = d.area || '';
@@ -1722,6 +1739,10 @@ function confirmarQtdPopup() {
     c.classList.add('visible');
     estados[popupIdAtual] = 'sim';
     
+    // Remove classe de erro (para de piscar)
+    const box = document.getElementById('box-' + popupIdAtual);
+    if (box) box.classList.remove('box-erro');
+    
     // Gera as caixas
     gerarCaixasComQtd(popupIdAtual, qtd);
   }
@@ -1756,6 +1777,11 @@ function selecionarNao(id, btn) {
   if (cx) { cx.innerHTML = ''; cx.classList.remove('visible'); }
   
   estados[id] = 'nao';
+  
+  // Remove classe de erro (para de piscar)
+  const box = document.getElementById('box-' + id);
+  if (box) box.classList.remove('box-erro');
+  
   document.getElementById(id + '-qtd').value = '0';
   contadorItens[id] = 0;
   onCampoAlterado();
@@ -2048,6 +2074,11 @@ function selecionarSimples(id, v, b) {
   if (v === 'sim') c.classList.add('visible');
   else c.classList.remove('visible');
   estados[id] = v;
+  
+  // Remove classe de erro (para de piscar)
+  const box = document.getElementById('box-' + id);
+  if (box) box.classList.remove('box-erro');
+  
   onCampoAlterado();
 }
 
@@ -2411,8 +2442,8 @@ function coletarCaixasPendentes() {
         const afetacao = afetacaoCheckbox ? afetacaoCheckbox.checked : false;
         const afetacaoQtd = document.getElementById(`${id}-afetacao-qtd-${num}`)?.value || '';
         
-        // Só inclui se for pendente
-        if ((cod || desc) && status === 'pendente') {
+        // Exporta PENDENTE e RESOLVIDO (não exporta REVISAR - itens não revisados)
+        if ((cod || desc) && (status === 'pendente' || status === 'resolvido')) {
           r[id].push({ codigo: cod, desc: desc, status: status, equipe: equipe, afetacao: afetacao, afetacaoQtd: afetacaoQtd });
         }
       });
@@ -2461,11 +2492,17 @@ function verificarCamposObrigatorios() {
   // Verificar se todos os itens têm SIM ou NÃO marcado
   const semResposta = [];
   todosItens.forEach(id => {
+    const box = document.getElementById('box-' + id);
     if (!estados[id]) {
       // Pega o nome amigável do item
       const titleEl = document.querySelector(`#box-${id} .item-title`);
       const nome = titleEl ? titleEl.textContent : id.toUpperCase();
       semResposta.push(nome);
+      // Adiciona classe de erro para piscar
+      if (box) box.classList.add('box-erro');
+    } else {
+      // Remove classe de erro se já marcou
+      if (box) box.classList.remove('box-erro');
     }
   });
   
@@ -2801,6 +2838,66 @@ function finalizarTurno() {
   mostrarNotificacao('⏳ Gerando arquivos...');
   
   const c = document.getElementById('main-container');
+  
+  // Oculta imagens externas para evitar erro tainted canvas
+  const imagens = document.querySelectorAll('#main-container img');
+  const imagensDisplay = [];
+  imagens.forEach((img, i) => {
+    imagensDisplay[i] = img.style.display;
+    img.style.display = 'none';
+  });
+  
+  // Substitui inputs por spans para captura correta
+  const inputsBackup = [];
+  c.querySelectorAll('input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), select').forEach((input, idx) => {
+    let valor = input.value || '';
+    
+    // Converte data para formato DD/MM/YYYY
+    if (input.type === 'date' && valor) {
+      const partes = valor.split('-');
+      if (partes.length === 3) {
+        valor = `${partes[2]}/${partes[1]}/${partes[0]}`;
+      }
+    }
+    
+    // Para selects, pega o texto da opção selecionada
+    if (input.tagName === 'SELECT') {
+      const opt = input.options[input.selectedIndex];
+      valor = opt ? opt.text : '';
+    }
+    
+    const rect = input.getBoundingClientRect();
+    const computedStyle = window.getComputedStyle(input);
+    
+    inputsBackup.push({
+      element: input,
+      display: input.style.display
+    });
+    
+    // Cria span com estilo idêntico ao input
+    const span = document.createElement('span');
+    span.id = 'pdf-span-' + idx;
+    span.textContent = valor;
+    span.style.display = 'inline-flex';
+    span.style.alignItems = 'center';
+    span.style.width = rect.width + 'px';
+    span.style.height = rect.height + 'px';
+    span.style.boxSizing = 'border-box';
+    span.style.backgroundColor = computedStyle.backgroundColor;
+    span.style.border = computedStyle.border;
+    span.style.borderRadius = computedStyle.borderRadius;
+    span.style.padding = '0 8px';
+    span.style.fontSize = computedStyle.fontSize;
+    span.style.fontFamily = computedStyle.fontFamily;
+    span.style.color = computedStyle.color;
+    span.style.textTransform = computedStyle.textTransform;
+    span.style.overflow = 'hidden';
+    span.style.whiteSpace = 'nowrap';
+    
+    input.parentNode.insertBefore(span, input);
+    input.style.display = 'none';
+  });
+  
   const op = document.getElementById('operador').value.trim() || 'OPERADOR';
   const ar = document.getElementById('area').value || 'AREA';
   const rg = document.getElementById('regiao').value || 'REGIAO';
@@ -2811,17 +2908,58 @@ function finalizarTurno() {
   const opAnteriorPart = operadorAnterior ? ` OP ANTERIOR_ ${operadorAnterior.replace(/\s+/g,'_')}` : '';
   const bn = `${ar} - ${rg} - OP ${op.replace(/\s+/g,'_')} - ${dataExtenso} às ${hr}${opAnteriorPart} (TROCA TURNO)`;
   
-  html2pdf().set({
-    margin: 3,
-    filename: bn + '.pdf',
-    image: { type: 'jpeg', quality: 0.95 },
-    html2canvas: { scale: 2, scrollY: 0, windowHeight: c.scrollHeight },
-    jsPDF: { unit: 'px', format: [c.scrollWidth + 20, c.scrollHeight + 20], orientation: 'portrait' },
-    pagebreak: { mode: 'avoid-all' }
-  }).from(c).save();
+  // Captura como IMAGEM (print)
+  html2canvas(c, {
+    scale: 2,
+    useCORS: true,
+    allowTaint: true,
+    scrollY: -window.scrollY,
+    windowWidth: c.scrollWidth,
+    windowHeight: c.scrollHeight
+  }).then(canvas => {
+    // Restaura elementos
+    restaurarElementos();
+    
+    // Converte canvas para imagem
+    const imgData = canvas.toDataURL('image/png');
+    
+    // Cria PDF com a imagem
+    const imgWidth = canvas.width;
+    const imgHeight = canvas.height;
+    
+    // PDF em pixels, orientação retrato
+    const pdf = new jspdf.jsPDF({
+      orientation: imgHeight > imgWidth ? 'portrait' : 'landscape',
+      unit: 'px',
+      format: [imgWidth / 2 + 20, imgHeight / 2 + 20]
+    });
+    
+    // Adiciona imagem centralizada
+    pdf.addImage(imgData, 'PNG', 10, 10, imgWidth / 2, imgHeight / 2);
+    pdf.save(bn + '.pdf');
+    
+    // Gera JSON
+    gerarJSON();
+  }).catch(err => {
+    restaurarElementos();
+    console.error('Erro ao gerar PDF:', err);
+    mostrarNotificacao('❌ Erro ao gerar PDF');
+  });
   
-  setTimeout(() => {
-    const d = coletarDadosParaExportacao(); // SÓ PENDENTES vão para exportação
+  function restaurarElementos() {
+    // Restaura imagens
+    imagens.forEach((img, i) => img.style.display = imagensDisplay[i] || '');
+    
+    // Remove spans e restaura inputs
+    inputsBackup.forEach((backup, idx) => {
+      const span = document.getElementById('pdf-span-' + idx);
+      if (span) span.remove();
+      backup.element.style.display = backup.display || '';
+    });
+  }
+  
+  function gerarJSON() {
+    const d = coletarDadosParaExportacao();
     const b = new Blob([JSON.stringify(d, null, 2)], { type: 'application/json' });
     const u = URL.createObjectURL(b);
     const a = document.createElement('a');
@@ -2830,7 +2968,7 @@ function finalizarTurno() {
     a.click();
     URL.revokeObjectURL(u);
     mostrarNotificacao('✅ Turno finalizado!');
-  }, 1000);
+  }
 }
 
 function enviarWhatsApp() {
