@@ -1115,7 +1115,6 @@ async function carregarDadosExternos() {
 let globalTimerStart = null, globalTimerInterval = null, autoSaveInterval = null;
 let equipeCount = 0, operadorAnterior = null;
 let estados = {}, modoNoturno = false, sessaoImportada = false, dadosImportados = null;
-let restaurandoSessao = false;
 let detalhesPendentes = {}, itemAtualDetalhe = null, configCores = {};
 let areaSelecionada = '', navegacaoAtiva = true;
 let formatoEquipeCompacto = false;
@@ -1196,7 +1195,6 @@ function restaurarSessaoCache() {
   
   const sessao = JSON.parse(localStorage.getItem('troca_turno_sessao'));
   if (sessao) {
-    restaurandoSessao = true;
     carregarDadosCompletos(sessao);
     globalTimerStart = sessao.timerStart || Date.now();
   } else {
@@ -1205,13 +1203,9 @@ function restaurarSessaoCache() {
   
   document.getElementById('global-clock').style.display = 'block';
   globalTimerInterval = setInterval(atualizarRelogio, 1000);
-  
-  setTimeout(() => {
-    restaurandoSessao = false;
-    iniciarAutoSave();
-    atualizarPreview();
-    mostrarNotificacao('✅ Sessão restaurada!');
-  }, 400);
+  iniciarAutoSave();
+  atualizarPreview();
+  mostrarNotificacao('✅ Sessão restaurada!');
 }
 
 function iniciarDoZeroNovo() {
@@ -1321,7 +1315,6 @@ function confirmarImportacao() {
   globalTimerStart = Date.now();
   globalTimerInterval = setInterval(atualizarRelogio, 1000);
   
-  restaurandoSessao = true;
   carregarDadosImportados(dadosImportados);
   sessaoImportada = true;
   
@@ -1337,17 +1330,15 @@ function confirmarImportacao() {
   
   // F Pendentes fica vazio (você preenche na sua troca)
   document.getElementById('f-pendentes').value = '';
+  // Incidências JÁ vem preenchida do carregarDadosImportados (valor do anterior)
   
   const h = new Date();
   document.getElementById('turno-data').value = new Date(h.getTime() - (h.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
   
-  setTimeout(() => {
-    restaurandoSessao = false;
-    iniciarAutoSave();
-    salvarSessaoAuto();
-    atualizarPreview();
-    mostrarNotificacao('📥 Importado! Atualize os campos obrigatórios.');
-  }, 400);
+  iniciarAutoSave();
+  salvarSessaoAuto();
+  atualizarPreview();
+  mostrarNotificacao('📥 Importado! Atualize os campos obrigatórios.');
 }
 
 function carregarDadosImportados(d) {
@@ -1786,7 +1777,6 @@ function verificarImportacao() {
 }
 
 function onCampoAlterado() { 
-  if (restaurandoSessao) return;
   verificarImportacao(); 
   salvarSessaoAuto(); 
   atualizarPreview(); 
