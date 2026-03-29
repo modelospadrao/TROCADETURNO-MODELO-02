@@ -43,7 +43,7 @@ const USUARIOS_SISTEMA = [
   { usuario: '7014', senha: '7014', nome: 'Jacome' },
   { usuario: '2044', senha: '2044', nome: 'Jose' },
   { usuario: '9001', senha: '9001', nome: 'Kellyo' },
-  { usuario: '0457', senha: '0457', nome: 'Lucas' },
+  { usuario: '0373', senha: '0373', nome: 'Lays Lopes' },
   { usuario: '0214', senha: '0214', nome: 'Matheus' },
   { usuario: '9020', senha: '9020', nome: 'Medeiros' },
   { usuario: '7019', senha: '7019', nome: 'Muniz' },
